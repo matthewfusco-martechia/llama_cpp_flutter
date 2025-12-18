@@ -96,6 +96,17 @@
   _sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
   llama_sampler_chain_add(_sampler, llama_sampler_init_top_k(config.topK));
   llama_sampler_chain_add(_sampler, llama_sampler_init_top_p(config.topP, 1));
+  // Add repetition penalty (repetition, frequency, presence)
+  llama_sampler_chain_add(_sampler,
+                          llama_sampler_init_penalties(
+                              llama_model_n_vocab(_model),
+                              llama_token_eos(_model), llama_token_nl(_model),
+                              config.repeatPenalty, // repeat penalty
+                              0.0f,                 // frequency penalty
+                              0.0f,                 // presence penalty
+                              true,                 // penalize_nl
+                              false                 // ignore_eos
+                              ));
   llama_sampler_chain_add(_sampler,
                           llama_sampler_init_temp(config.temperature));
   llama_sampler_chain_add(_sampler,
@@ -173,12 +184,12 @@
     tokens.resize(fullPromptString.length + 1);
     int n_tokens = llama_tokenize(vocab, fullPromptString.UTF8String,
                                   (int)fullPromptString.length, tokens.data(),
-                                  (int)tokens.size(), true, false);
+                                  (int)tokens.size(), false, false);
     if (n_tokens < 0) {
       tokens.resize(-n_tokens);
       n_tokens = llama_tokenize(vocab, fullPromptString.UTF8String,
                                 (int)fullPromptString.length, tokens.data(),
-                                (int)tokens.size(), true, false);
+                                (int)tokens.size(), false, false);
     }
     tokens.resize(n_tokens);
 
