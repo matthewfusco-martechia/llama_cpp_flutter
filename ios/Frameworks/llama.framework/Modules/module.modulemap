@@ -1,0 +1,10 @@
+framework module llama {
+    umbrella header "llama.h"
+    export *
+    module * { export * }
+    link "c++"
+    link framework "Accelerate"
+    link framework "Metal"
+    link framework "MetalKit"
+    link framework "Foundation"
+}
