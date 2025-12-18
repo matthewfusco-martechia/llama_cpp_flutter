@@ -148,10 +148,8 @@
     NSString *fullPromptString;
 
     if (formattedPrompt && formattedPrompt.length > 0) {
-      // Use pre-formatted prompt from Dart
       fullPromptString = formattedPrompt;
     } else {
-      // Fallback to internal ChatML formatting (legacy)
       NSMutableString *buffer = [NSMutableString string];
       if (systemPrompt && systemPrompt.length > 0) {
         [buffer
@@ -168,22 +166,24 @@
       fullPromptString = buffer;
     }
 
+    const struct llama_vocab *vocab = llama_model_get_vocab(_model);
+
     // 2. Tokenize
     std::vector<llama_token> tokens;
     tokens.resize(fullPromptString.length + 1);
-    int n_tokens = llama_tokenize(_model, fullPromptString.UTF8String,
+    int n_tokens = llama_tokenize(vocab, fullPromptString.UTF8String,
                                   (int)fullPromptString.length, tokens.data(),
                                   (int)tokens.size(), true, false);
     if (n_tokens < 0) {
       tokens.resize(-n_tokens);
-      n_tokens = llama_tokenize(_model, fullPromptString.UTF8String,
+      n_tokens = llama_tokenize(vocab, fullPromptString.UTF8String,
                                 (int)fullPromptString.length, tokens.data(),
                                 (int)tokens.size(), true, false);
     }
     tokens.resize(n_tokens);
 
-    // 3. Clear KV cache
-    llama_kv_cache_clear(_ctx);
+    // 3. Clear KV cache (using new API)
+    llama_memory_clear(llama_get_memory(_ctx), true);
 
     // 4. Ingest tokens
     int maxTokens = self.currentConfig.maxTokens ?: 1024;
@@ -209,12 +209,12 @@
         break;
 
       llama_token id = llama_sampler_sample(_sampler, _ctx, -1);
-      if (llama_token_is_eog(_model, id))
+      if (llama_vocab_is_eog(vocab, id))
         break;
 
       // Convert to string piece
       char piece[128];
-      int n = llama_token_to_piece(_model, id, piece, sizeof(piece), 0, true);
+      int n = llama_token_to_piece(vocab, id, piece, sizeof(piece), 0, true);
       if (n > 0) {
         NSString *tokenStr =
             [[NSString alloc] initWithBytes:piece
@@ -244,7 +244,7 @@
 
 - (void)resetContext {
   if (_ctx)
-    llama_kv_cache_clear(_ctx);
+    llama_memory_clear(llama_get_memory(_ctx), true);
 }
 
 @end

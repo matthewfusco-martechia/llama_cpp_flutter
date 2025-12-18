@@ -1,6 +1,6 @@
 name: llama_cpp_flutter
 description: A production-ready Flutter plugin for on-device GGUF model inference using llama.cpp on iOS with Metal GPU acceleration.
-version: 0.1.2
+version: 0.1.3
 homepage: https://github.com/martechia/llama_cpp_flutter
 
 environment:
