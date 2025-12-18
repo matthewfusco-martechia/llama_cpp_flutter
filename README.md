@@ -99,15 +99,29 @@ Stream<String> generateResponse(String prompt) {
 
 | Model | Size | RAM Required | Performance |
 |-------|------|--------------|-------------|
+| Model | Size | RAM Required | Performance |
+|-------|------|--------------|-------------|
 | qwen2.5-0.5b-instruct-q4_k_m | 400 MB | ~800 MB | Excellent |
-| gemma-2-2b-it-q4_0 | 1.4 GB | ~2.2 GB | Very Good |
 | llama-3.2-1b-instruct-q4_k_m | 700 MB | ~1.2 GB | Very Good |
+| gemma-2-2b-it-q4_0 | 1.4 GB | ~2.2 GB | Very Good |
 | phi-3-mini-4k-q4_k_m | 2.2 GB | ~3.5 GB | Good |
 
-**Recommendations:**
-- iPhone 12+ / iPad Air 4+: Use 1-2B parameter models (Q4/Q5)
-- iPhone 14+ / iPad Pro: Can run 3-4B parameter models (Q4)
-- Always use Q4_K_M or Q5_K_M quantization for best quality/size ratio
+### How to Download GGUF Models
+
+To use this plugin, you'll need models in **GGUF** format. The best place to find them is [Hugging Face](https://huggingface.co/models?search=gguf).
+
+1. **Find a model**: Search for popular models like `Qwen/Qwen2.5-0.5B-Instruct-GGUF` or `unsloth/Llama-3.2-1B-Instruct-GGUF`.
+2. **Select a Quantization**: Download files ending in `.gguf`. We recommend:
+   - `Q4_K_M.gguf` (Middle ground - recommended for most devices)
+   - `Q5_K_M.gguf` (Higher quality, slightly larger)
+   - `Q8_0.gguf` (Highest quality, very large - iPhone 15/16 Pro only)
+3. **Move to device**: For mobile apps, you'll typically use `dio` or `http` to download the model at runtime to the device's `getApplicationDocumentsDirectory()`.
+
+### Recommended Models for iOS
+
+- **iPhone 13 / 14 (Standard)**: Use models < 1B parameters (e.g., Qwen 0.5B, Llama 3.2 1B).
+- **iPhone 15 / 16 (Standard)**: Can handle up to 2B parameters (e.g., Gemma 2B, Phi-3 Mini).
+- **iPhone 15 Pro / 16 Pro (8GB+ RAM)**: Can reliably run 3B-4B parameter models with Q4 quantization.
 
 ## Configuration Options
 
