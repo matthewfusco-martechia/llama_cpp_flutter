@@ -11,12 +11,9 @@ public class LlamaCppFlutterPlugin: NSObject, FlutterPlugin {
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = LlamaCppFlutterPlugin()
-        
-        // Method channel
         let channel = FlutterMethodChannel(name: instance.CHANNEL_NAME, binaryMessenger: registrar.messenger())
         registrar.addMethodCallDelegate(instance, channel: channel)
         
-        // Event channel
         let eventChannel = FlutterEventChannel(name: instance.STREAM_CHANNEL_NAME, binaryMessenger: registrar.messenger())
         eventChannel.setStreamHandler(instance)
         
@@ -34,15 +31,31 @@ public class LlamaCppFlutterPlugin: NSObject, FlutterPlugin {
                 return
             }
             
-            let config = LlamaModelConfig.config(from: args)
-            var error: NSError?
-            let success = wrapper?.loadModel(config, error: &error) ?? false
+            let config = LlamaModelConfig()
+            config.modelPath = args["modelPath"] as? String ?? ""
+            config.contextSize = Int32(args["contextSize"] as? Int ?? 2048)
+            config.nGpuLayers = Int32(args["nGpuLayers"] as? Int ?? -1)
+            config.nThreads = Int32(args["nThreads"] as? Int ?? 4)
+            config.batchSize = Int32(args["batchSize"] as? Int ?? 512)
+            config.temperature = Float(args["temperature"] as? Double ?? 0.7)
+            config.topK = Int32(args["topK"] as? Int ?? 40)
+            config.topP = Float(args["topP"] as? Double ?? 0.9)
+            config.repeatPenalty = Float(args["repeatPenalty"] as? Double ?? 1.1)
+            config.maxTokens = Int32(args["maxTokens"] as? Int ?? 1024)
+            config.useGpu = args["useGpu"] as? Bool ?? true
+            config.verbose = args["verbose"] as? Bool ?? false
             
-            if success {
-                result(["success": true])
-            } else {
-                result(["success": false, "error": error?.localizedDescription ?? "Unknown error"])
+            var success = false
+            do {
+                // ObjC methods with NSError** are mapped to throwing in Swift
+                try wrapper?.loadModel(config)
+                success = true
+            } catch {
+                result(["success": false, "error": error.localizedDescription])
+                return
             }
+            
+            result(["success": success])
             
         case "streamPrompt":
             guard let args = call.arguments as? [String: Any] else {
@@ -53,7 +66,7 @@ public class LlamaCppFlutterPlugin: NSObject, FlutterPlugin {
             let prompt = args["prompt"] as? String ?? ""
             let systemPrompt = args["systemPrompt"] as? String
             let history = args["history"] as? [[String: String]] ?? []
-            let formattedPrompt = args["formattedPrompt"] as? String // New argument
+            let formattedPrompt = args["formattedPrompt"] as? String
             
             let genId = nextGenerationId
             nextGenerationId += 1
@@ -84,9 +97,6 @@ public class LlamaCppFlutterPlugin: NSObject, FlutterPlugin {
         case "resetContext":
             wrapper?.resetContext()
             result(true)
-            
-        case "getModelInfo":
-            result(["status": "ready"])
             
         default:
             result(FlutterMethodNotImplemented)

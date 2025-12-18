@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'llama_cpp_flutter'
-  s.version          = '0.1.1'
+  s.version          = '0.1.2'
   s.summary          = 'llama.cpp inference for Flutter iOS'
   s.description      = <<-DESC
 A production-ready Flutter plugin for on-device GGUF model inference using llama.cpp on iOS with Metal GPU acceleration.
